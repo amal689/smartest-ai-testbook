@@ -1,0 +1,24 @@
+{
+  "name": "smartest-ai-testbook-web-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "start": "vite preview --host 0.0.0.0 --port 3000 --strictPort",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "7.0.2",
+    "vite": "7.3.7"
+  },
+  "engines": {
+    "node": "24.22.1"
+  }
+}

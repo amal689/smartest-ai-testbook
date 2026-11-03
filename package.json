@@ -1,0 +1,17 @@
+{
+  "name": "smartest-ai-testbook-specs",
+  "private": true,
+  "scripts": {
+    "api:setup": "node api/scripts/setup-generator.mjs",
+    "api:generate": "node api/scripts/generate.mjs all",
+    "api:check": "node api/scripts/generate.mjs all --check",
+    "verify:http": "node api/scripts/verify-web.mjs --http-only",
+    "verify:browser": "node api/scripts/verify-web.mjs",
+    "verify:generation": "node api/scripts/verify-generation.mjs"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "^1.15.0",
+    "openapi-typescript": "7.13.0",
+    "playwright": "1.56.1"
+  }
+}

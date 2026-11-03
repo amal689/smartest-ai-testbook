@@ -1,0 +1,19 @@
+services:
+  typescript:
+    build: ./typescript
+    ports:
+      - "3001:3001"
+    environment:
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+  python:
+    build: ./python
+    ports:
+      - "3002:3002"
+    environment:
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+  web-client:
+    build: ./web-client
+    ports:
+      - "3000:80"
+    volumes:
+      - ./web-client/public/configuration.js:/usr/share/nginx/html/configuration.js:ro

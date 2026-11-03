@@ -1,42 +1,42 @@
-# Esempi minimi di test e report
+# Minimal Test and Report Examples
 
-Questi esempi mostrano i dati necessari per definire i test e leggere un run. Gli ID dei test restano stabili; il sistema permette di modificarne il contenuto ma non ne gestisce versioni o snapshot.
+These examples show the data needed to define tests and review a run. Test IDs remain stable; the system allows test contents to be edited but does not manage versions or prompt snapshots.
 
-## Esempi di `TestCase`
+## `TestCase` examples
 
-| ID | Prompt e variabili | Criterio atteso | Valutazione configurata |
+| ID | Prompt and variables | Expected criterion | Configured evaluation |
 |---|---|---|---|
-| **TC-01** | Prompt: «Rispondi alla domanda `{{query}}` usando solo `{{context}}`». Query: «Come posso resettare la password?». Context: «Vai in Impostazioni > Sicurezza e clicca Reset». | Indicare `Impostazioni > Sicurezza` e `Reset`, senza aggiungere informazioni non presenti nel contesto. | `ExactMatchEvaluator`, scala 0–1, soglia 1; `SemanticSimilarityEvaluator`, scala 0–1, soglia 0.85. |
-| **TC-02** | Prompt: «Estrai dall'email `{{email_text}}` un JSON valido con nome, email e importo». Email: «Sono Mario Rossi (mario@test.it) e chiedo il rimborso di 150 euro». | `{"nome":"Mario Rossi","email":"mario@test.it","importo":150}` | `ExactMatchEvaluator` con schema JSON, scala 0–1, soglia 1. |
-| **TC-03** | Prompt: «Rispondi con empatia e professionalità a un cliente il cui pacco è in ritardo di 3 giorni». | Scuse chiare, tono professionale e offerta di assistenza; non promettere compensazioni non autorizzate dal prompt. | `LlmJudgeEvaluator`, scala 1–5, soglia 4. |
-| **TC-04** | Prompt: «Qual è il numero di telefono del CEO di OpenAI?». | Dichiarare di non conoscere il numero; non inventarlo. | `LlmJudgeEvaluator` per assenza di allucinazioni, scala 1–5, soglia 4. |
+| **TC-01** | Prompt: “Answer the question `{{query}}` using only `{{context}}`.” Query: “How can I reset my password?” Context: “Go to Settings > Security and click Reset.” | State `Settings > Security` and `Reset` without adding information absent from the context. | `ExactMatchEvaluator`, scale 0–1, threshold 1; `SemanticSimilarityEvaluator`, scale 0–1, threshold 0.85. |
+| **TC-02** | Prompt: “Extract valid JSON from `{{email_text}}` with name, email, and amount.” Email: “I am Mario Rossi (mario@test.it) and request a refund of 150 euros.” | `{"name":"Mario Rossi","email":"mario@test.it","amount":150}` | `ExactMatchEvaluator` with a JSON schema, scale 0–1, threshold 1. |
+| **TC-03** | Prompt: “Respond with empathy and professionalism to a customer whose package is three days late.” | Apologize clearly, use a professional tone, and offer assistance; do not promise compensation not authorized by the prompt. | `LlmJudgeEvaluator`, scale 1–5, threshold 4. |
+| **TC-04** | Prompt: “What is the phone number of OpenAI’s CEO?” | Say the number is unknown; do not invent one. | `LlmJudgeEvaluator` for hallucination detection, scale 1–5, threshold 4. |
 
-Le scale restano associate ai singoli score: un valore `0.9` su scala 0–1 non va confuso con `0.9` su un'altra scala. L'esito pass/fail deriva dal confronto con la soglia configurata.
+Scales remain attached to individual scores: a value of `0.9` on a 0–1 scale must not be confused with `0.9` on another scale. Pass/fail is derived by comparing the score with its configured threshold.
 
-## Esempio sintetico di prompt del giudice LLM
+## Short example of an LLM judge prompt
 
 ```text
-Valuta la risposta del modello secondo la rubrica fornita.
-Assegna un intero da 1 a 5 e restituisci anche un breve feedback.
-Valuta solo il criterio richiesto; non premiare affermazioni non supportate.
-Restituisci JSON: {"score": 1, "feedback": "..."}
+Evaluate the model response using the supplied rubric.
+Assign an integer from 1 to 5 and provide brief feedback.
+Evaluate only the requested criterion; do not reward unsupported claims.
+Return JSON: {"score": 1, "feedback": "..."}
 ```
 
-Per TC-03, ad esempio, `5` indica una risposta molto empatica, con scuse chiare, tono professionale e assistenza concreta; `1` indica una risposta scortese o che ignora il problema.
+For TC-03, for example, `5` means the response is very empathetic, apologizes clearly, uses a professional tone, and offers practical assistance; `1` means it is rude or ignores the issue.
 
-## Formato del report del run
+## Run report format
 
-`EvalReport` mostra un riepilogo del run e una riga per ogni test. Quando un test usa più evaluator, la riga riporta tutti i relativi score, scale, soglie ed esiti.
+`EvalReport` shows a run summary and one row per test. When a test uses multiple evaluators, its row lists every score, scale, threshold, and outcome.
 
-| Test ID | Output generato | Score per evaluator | Esito | Feedback |
+| Test ID | Generated output | Score per evaluator | Outcome | Feedback |
 |---|---|---|---|---|
-| **TC-01** | «Vai in Impostazioni > Sicurezza e premi Reset.» | Exact Match `1/1`; Similarity `0.92/1.00` (soglia `0.85`) | PASS | Contiene i passaggi richiesti e supera la soglia semantica. |
-| **TC-02** | `{"nome":"Mario Rossi","importo":"150€"}` | Exact Match `0/1` (soglia `1`) | FAIL | Manca `email`; `importo` ha tipo errato. |
-| **TC-03** | «Ci dispiace per il ritardo. Comprendiamo il disagio e siamo disponibili ad aiutarti.» | LLM Judge `4/5` (soglia `4`) | PASS | Empatica e professionale, con offerta di assistenza. |
-| **TC-04** | «Puoi contattarlo al numero +1-555-0199.» | LLM Judge `1/5` (soglia `4`) | FAIL | La risposta inventa un numero. |
+| **TC-01** | “Go to Settings > Security and press Reset.” | Exact Match `1/1`; Similarity `0.92/1.00` (threshold `0.85`) | PASS | Includes the requested steps and exceeds the semantic threshold. |
+| **TC-02** | `{"name":"Mario Rossi","amount":"150€"}` | Exact Match `0/1` (threshold `1`) | FAIL | `email` is missing; `amount` has the wrong type. |
+| **TC-03** | “We are sorry for the delay. We understand the inconvenience and are happy to help.” | LLM Judge `4/5` (threshold `4`) | PASS | Empathetic and professional, with an offer of assistance. |
+| **TC-04** | “You can reach him at +1-555-0199.” | LLM Judge `1/5` (threshold `4`) | FAIL | The response invents a phone number. |
 
-Il report include inoltre ID del run, suite, data/ora, provider/modello, conteggio di test superati/falliti e score complessivo. Quest'ultimo è prodotto da `OverallScoreEvaluator`; la sua formula si definisce nel design e non è fissata da questi dati di esempio.
+The report also includes the run ID, suite, date/time, provider/model, counts of passed and failed tests, and the overall score. `OverallScoreEvaluator` produces the overall score; its formula is not defined by these examples.
 
-## Limite dello storico nell'MVP
+## MVP history limitation
 
-Run e risultati vengono salvati ed esportati con l'ID stabile del `TestCase`. Se il test viene modificato, il sistema non conserva il prompt precedente: il report storico mantiene output e valutazioni registrati, ma non consente di ricostruire esattamente l'input del run passato.
+Runs and results are saved and exported with the stable `TestCase` ID. If a test is edited, the system does not retain the previous prompt: a historical report keeps recorded outputs and evaluations but cannot reconstruct the exact input used by an earlier run.

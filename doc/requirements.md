@@ -1,56 +1,56 @@
-# Requisiti MVP — Smartest AI Testbook
+# MVP Requirements — Smartest AI Testbook
 
-## Obiettivo e core value
+## Goal and core value
 
-Il sistema consente a un team di definire test per un'applicazione basata su LLM, eseguirli su un modello e ottenere una valutazione leggibile delle risposte. Il valore centrale è trasformare output LLM variabili in risultati misurabili e consultabili.
+The system enables a team to define tests for an LLM-based application, run them against a model, and obtain readable evaluations of the responses. Its core value is turning variable LLM outputs into measurable, reviewable results.
 
-Il progetto  descrive un MVP. Si progettano SOLO funzioni che servono a definire una suite, eseguire un run, valutare le risposte, consultare i risultati o esportare i dati.
+This project describes an MVP. Design only features needed to define a suite, run it, evaluate responses, review results, or export data.
 
-## Requisiti funzionali
+## Functional requirements
 
-### FR-1 — Gestire suite e test case
+### FR-1 — Manage test suites and test cases
 
-- L'utente può creare e modificare una `TestSuite` con nome e descrizione.
-- Una suite raccoglie uno o più `TestCase`.
-- Ogni `TestCase` ha un ID stabile, un prompt, eventuali variabili e un criterio di valutazione (golden reference e/o rubrica).
-- L'utente può configurare per il test uno o più evaluator e le relative soglie.
-- I test sono modificabili, ma il sistema **non gestisce versioni dei test né snapshot del prompt**. I risultati storici conservano il riferimento all'ID del test e l'esito registrato; non consentono di ricostruire il contenuto del test al momento di un run precedente.
+- Users can create and edit a `TestSuite` with a name and description.
+- A suite contains one or more `TestCase` objects.
+- Each `TestCase` has a stable ID, a prompt, optional variables, and evaluation criteria (a golden reference and/or a rubric).
+- Users can configure one or more evaluators and their thresholds for a test.
+- Tests are editable, but the system **does not manage test versions or prompt snapshots**. Historical results retain the test ID and recorded outcome; they cannot reconstruct the test contents at the time of an earlier run.
 
-### FR-2 — Eseguire una suite
+### FR-2 — Run a suite
 
-- L'utente può avviare una suite selezionando un `ModelProvider`.
-- Il sistema invia al provider il prompt del test con le sue variabili e raccoglie l'output generato.
-- Ogni esecuzione è rappresentata da un `EvalRun`, collegato alla suite e ai risultati prodotti.
-- Un errore su un singolo test viene registrato nel relativo `EvalResult` e non cancella gli altri risultati del run.
+- Users can start a suite run by selecting a `ModelProvider`.
+- The system sends the test prompt and its variables to the provider and collects the generated output.
+- Each execution is represented by an `EvalRun` linked to the suite and its results.
+- An error on one test is recorded in its `EvalResult` and does not discard the other results in the run.
 
-### FR-3 — Valutare le risposte
+### FR-3 — Evaluate responses
 
-- Ogni output generato può essere valutato da uno o più `Evaluator`.
-- Ogni score registra valore, scala, feedback e, se configurata, soglia con esito pass/fail.
-- L'MVP prevede tre strategie iniziali:
-  - `ExactMatchEvaluator`: controllo deterministico di contenuto o schema;
-  - `SemanticSimilarityEvaluator`: similarità semantica rispetto alla golden reference;
-  - `LlmJudgeEvaluator`: valutazione con rubrica tramite LLM.
-- Gli score individuali mantengono la propria scala; non si assume che scale diverse siano direttamente confrontabili.
+- Each generated output can be evaluated by one or more `Evaluator` implementations.
+- Each score records a value, scale, feedback, and, when configured, a threshold with a pass/fail outcome.
+- The MVP starts with three strategies:
+  - `ExactMatchEvaluator`: deterministic content or schema checks;
+  - `SemanticSimilarityEvaluator`: semantic similarity against the golden reference;
+  - `LlmJudgeEvaluator`: rubric-based evaluation using an LLM.
+- Individual scores retain their own scales; different scales are not assumed to be directly comparable.
 
-### FR-4 — Consultare il report
+### FR-4 — Review the report
 
-- Al termine di un run, `EvalReport` aggrega i relativi `EvalResult` e presenta un giudizio complessivo prodotto da una strategia dedicata (`OverallScoreEvaluator`).
-- Il report rende consultabili: suite, data del run, modello/provider, ID del test, output generato, evaluator applicati, score con scala, soglia/esito e feedback.
-- Il valore complessivo è prodotto dalla strategia, ma la formula di aggregazione è parte dell'esercizio di design e non viene fissata qui.
+- At the end of a run, `EvalReport` aggregates its `EvalResult` objects and presents an overall judgment produced by a dedicated strategy (`OverallScoreEvaluator`).
+- The report makes the suite, run date, model/provider, test ID, generated output, applied evaluators, scores and scales, thresholds and outcomes, and feedback available for review.
+- The overall value is produced by the strategy, but its aggregation formula is part of the design exercise and is not specified here.
 
-### FR-5 — Persistenza ed export
+### FR-5 — Persistence and export
 
-- Suite, test case, run e risultati sono salvati nel database.
-- L'utente può esportare una suite in JSON. L'export comprende la suite, i test e la relativa cronologia di run e risultati.
-- Il file esportato può essere salvato e versionato all'esterno del sistema; non è versionato il singolo test all'interno dell'applicazione.
+- Suites, test cases, runs, and results are stored in a database.
+- Users can export a suite as JSON. The export includes the suite, its tests, and the related run and result history.
+- The exported file can be stored and versioned outside the system; individual tests are not versioned inside the application.
 
-## Requisiti non funzionali essenziali
+## Essential non-functional requirements
 
-- **Estensibilità:** si può aggiungere un evaluator o un adapter per un provider senza modificare la logica principale del runner.
-- **Isolamento degli errori:** un errore relativo a un test viene registrato senza perdere i risultati degli altri test del run.
-- **Tracciabilità minima:** ogni run registra data/ora e provider/modello; ogni risultato conserva l'ID del test, output e valutazioni ottenute.
+- **Extensibility:** an evaluator or provider adapter can be added without changing the runner's core logic.
+- **Error isolation:** an error for one test is recorded without losing other results in the run.
+- **Minimum traceability:** each run records its date/time and provider/model; each result retains the test ID, output, and evaluations.
 
-## Fuori perimetro MVP
+## Outside the MVP scope
 
-Versionamento interno o snapshot dei test, confronto automatico con baseline/regressioni, dashboard e aggiornamenti live, account e permessi, import/export CSV, CI/CD e CLI, esecuzione concorrente, retry/backoff, ottimizzazione costi e scelta di tecnologie specifiche per database o code.
+Internal test versioning or snapshots, automatic baseline/regression comparison, dashboards and live updates, accounts and permissions, CSV import/export, CI/CD and CLI, concurrent execution, retries/backoff, cost optimization, and selection of specific database or queue technologies.

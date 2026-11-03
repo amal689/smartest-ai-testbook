@@ -1,0 +1,11 @@
+{
+  "generator": "typescript-fetch",
+  "version": "7.26.0",
+  "output": "web-client/src/generated",
+  "templates": "api/generators/templates/typescript-fetch",
+  "additionalProperties": {
+    "supportsES6": true,
+    "withInterfaces": true,
+    "hideGenerationTimestamp": true
+  }
+}

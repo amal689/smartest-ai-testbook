@@ -1,0 +1,39 @@
+{
+  "name": "smartest-ai-testbook",
+  "version": "1.0.0",
+  "description": "Domain modeling and object-oriented design for an MVP that evaluates LLM-generated responses. Loosely inspired by yTestbook.",
+  "main": "src/index.ts",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alefalezza/smartest-ai-testbook.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://github.com/alefalezza/smartest-ai-testbook#readme",
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.3",
+    "typescript": "^7.0.2"
+  },
+  "private": true,
+  "dependencies": {
+    "@types/node": "^26.6.5",
+    "cors": "2.8.6",
+    "express": "5.1.0",
+    "tsx": "^4.23.15"
+  },
+  "engines": {
+    "node": "24.22.1"
+  },
+  "volta": {
+    "node": "24.22.1"
+  }
+}

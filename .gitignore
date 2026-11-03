@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+.npm-cache/
+.uv-cache/
+dist/
+.api-tools/
+doc-notes/

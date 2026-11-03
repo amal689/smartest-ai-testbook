@@ -1,0 +1,11 @@
+{
+  "generator": "python-fastapi",
+  "version": "7.26.0",
+  "output": "python/src/web_server/generated",
+  "globalProperties": "models,modelTests=false,modelDocs=false",
+  "additionalProperties": {
+    "packageName": "web_server.generated",
+    "sourceFolder": "src",
+    "hideGenerationTimestamp": true
+  }
+}
