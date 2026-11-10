@@ -15,6 +15,7 @@ export interface EvalScore {
 
 export interface IEvalResult {
   readonly testId: string;
+  readonly prompt: string;
   readonly output?: string;
   readonly error?: string;
   readonly scores: EvalScore[];
@@ -37,6 +38,7 @@ export class EvalResult implements IEvalResult {
 
   constructor(
     readonly testId: string,
+    readonly prompt: string,
     readonly output?: string,
     readonly error?: string,
   ) {}

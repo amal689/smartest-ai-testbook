@@ -14,7 +14,7 @@ This project describes an MVP. Design only features needed to define a suite, ru
 - A suite contains one or more `TestCase` objects.
 - Each `TestCase` has a stable ID, a prompt, optional variables, and evaluation criteria (a golden reference and/or a rubric).
 - Users can configure one or more evaluators and their thresholds for a test.
-- Tests are editable, but the system **does not manage test versions or prompt snapshots**. Historical results retain the test ID and recorded outcome; they cannot reconstruct the test contents at the time of an earlier run.
+- Tests are editable; the system does not manage test versions. Each historical result records the original prompt template, but not the complete test definition.
 
 ### FR-2 — Run a suite
 
@@ -26,7 +26,7 @@ This project describes an MVP. Design only features needed to define a suite, ru
 ### FR-3 — Evaluate responses
 
 - Each generated output can be evaluated by one or more `Evaluator` implementations.
-- Each score records a value, scale, feedback, and, when configured, a threshold with a pass/fail outcome.
+- Each expectation has a threshold; its recorded outcome includes the applied threshold, pass/fail status and feedback. Successful evaluations also record a value and scale; evaluator errors are recorded as failures.
 - The MVP starts with three strategies:
   - `ExactMatchEvaluator`: deterministic content or schema checks;
   - `SemanticSimilarityEvaluator`: semantic similarity against the golden reference;
@@ -35,9 +35,9 @@ This project describes an MVP. Design only features needed to define a suite, ru
 
 ### FR-4 — Review the report
 
-- At the end of a run, `EvalReport` aggregates its `EvalResult` objects and presents an overall judgment produced by a dedicated strategy (`OverallScoreEvaluator`).
+- At the end of a run, `EvalReport` lists the recorded `EvalResult` objects without aggregating them.
 - The report makes the suite, run date, model/provider, test ID, generated output, applied evaluators, scores and scales, thresholds and outcomes, and feedback available for review.
-- The overall value is produced by the strategy, but its aggregation formula is part of the design exercise and is not specified here.
+- The report does not calculate an overall score or aggregate test results.
 
 ### FR-5 — Persistence and export
 
@@ -53,4 +53,4 @@ This project describes an MVP. Design only features needed to define a suite, ru
 
 ## Outside the MVP scope
 
-Internal test versioning or snapshots, automatic baseline/regression comparison, dashboards and live updates, accounts and permissions, CSV import/export, CI/CD and CLI, concurrent execution, retries/backoff, cost optimization, and selection of specific database or queue technologies.
+Internal test versioning, automatic baseline/regression comparison, dashboards and live updates, accounts and permissions, CSV import/export, CI/CD and CLI, concurrent execution, retries/backoff, cost optimization, and selection of specific database or queue technologies.

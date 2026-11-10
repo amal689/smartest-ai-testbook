@@ -34,7 +34,7 @@ Do not design dashboards, login, distributed queues, live reports, CI/CD, CLI, c
 
 - Turn the domain model into classes and responsibilities.
 - Define the runner interface and its boundary with the provider.
-- Derive Strategy from interchangeable evaluators and the overall judgment calculation.
+- Derive Strategy from interchangeable evaluators.
 - Derive Adapter from the need to isolate provider APIs.
 - Explain design choices and leave out details that are unnecessary for the MVP.
 
@@ -65,8 +65,8 @@ and Python transport models. The HTTP server needs no handwritten classes.
 Use Node 24.22.1 and Python 3.12 or later with uv. In separate terminals:
 
 1. In `typescript/`, run `npm ci` and `npm run dev` to start the API on port 3001.
-2. In `python/`, run `uv sync --locked`, set `PYTHONPATH=src`, and run
-   `uv run --no-sync python -m web_server` to start the API on port 3002.
+2. In `python/`, run `uv sync --locked`, then run
+   `uv run --no-sync python -m smartest_ai_testbook.web_server` to start the API on port 3002.
 3. In `web-client/`, run `npm ci`, `npm run build` and `npm start`.
 
 Open `http://localhost:3000`. The client imports the static `configuration.js`
@@ -74,7 +74,7 @@ module at runtime. It contains only `export const apiBaseUrl = 'http://localhost
 Change the URL to port 3002 in the served `web-client/dist/configuration.js` and
 reload to select Python without rebuilding. The default copied during a build
 is in `web-client/public/configuration.js`.
-In PowerShell, set `PYTHONPATH` with `$env:PYTHONPATH = "src"`. Both backends default to accepting
+Both backends default to accepting
 browser requests from `http://localhost:3000`; set `WEB_ORIGIN` for another origin.
 Runtime client configuration is public and must contain no secrets.
 
@@ -87,7 +87,7 @@ for generator versions, ownership and safe regeneration.
 - At the repository root, `npm ci` installs OpenSpec and generation/browser tooling;
   `npx openspec validate --all` validates specifications.
 - In `typescript/`, `npm test` runs HTTP tests and `npm run typecheck` checks types.
-- In `python/`, with `PYTHONPATH=src`,
+- In `python/`, after `uv sync --locked`,
   `uv run --no-sync python -m unittest discover -s tests -v` runs HTTP tests.
 - At the root, `npm run api:setup` downloads the pinned generator (requires Java 21),
   `npm run api:generate` regenerates all artifacts, and `npm run api:check` detects

@@ -39,6 +39,12 @@ test('executes the basic example with a model supplied by a provider', async () 
   assert.equal(run.modelName, 'constant-paris');
   assert.equal(run.results.length, 1);
   const result = run.results[0];
+  (definition as { prompt: string }).prompt = 'edited';
+  const { ReportGenerator } = await import('../reporting/report-generator.js');
+  const report = new ReportGenerator().generate(run);
+  assert.equal(report.results[0]?.prompt, 'Return exactly: Paris');
+  (result as { prompt: string }).prompt = 'changed later';
+  assert.equal(report.results[0]?.prompt, 'Return exactly: Paris');
   assert.equal(result.testId, definition.id);
   assert.equal(result.output, 'Paris');
   assert.equal(result.error, undefined);
@@ -110,6 +116,11 @@ test('records model errors and continues with the following test', async () => {
     const [failed, succeeded] = run.results;
     assert.equal(failed.testId, suite.tests[0].id);
     assert.equal(failed.error, 'Model unavailable');
+    assert.equal(failed.prompt, 'Fail');
+    const { ReportGenerator } = await import('../reporting/report-generator.js');
+    const report = new ReportGenerator().generate(run);
+    assert.equal(report.results[0]?.prompt, 'Fail');
+    assert.equal(report.results[0]?.error, 'Model unavailable');
     assert.equal(failed.output, undefined);
     assert.deepEqual(failed.scores, []);
     assert.equal(failed.passed, false);

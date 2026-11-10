@@ -10,7 +10,7 @@ Only essential fields and operations are shown. The [requirements](./requirement
 |---|---|---|
 | Test creation | `ITestCaseBuilder`, `ITestSuite` | A configured `ITestSuite`. |
 | Execution | `IEvalRunner.run(suite, model)` | A completed `IEvalRun`, including results and scores. |
-| Reporting | `IReportGenerator.generate(run)` | An `IEvalReport` with the results and overall judgment. |
+| Reporting | `IReportGenerator.generate(run)` | An `IEvalReport` exposing the recorded results. |
 | Exporting | `ISuiteExporter.exportSuite(suite, runs)` | A JSON string containing the suite, tests and run/result history. |
 
 The diagram shows public contracts rather than duplicating every interface and its implementation. Namespaces represent logical subsystems, not deployment units or required directory layers. Arrows show structural dependencies; the sequence below shows execution order.
@@ -76,6 +76,7 @@ classDiagram
         class IEvalResult {
             <<interface>>
             +testId: String
+            +prompt: String
             +output: String?
             +error: String?
             +passed: Boolean
@@ -101,8 +102,12 @@ classDiagram
         }
         class IEvalReport {
             <<interface>>
-            +run: IEvalRun
-            +overall: EvalScore
+            +id: String
+            +suiteId: String
+            +startedAt: DateTime
+            +providerName: String
+            +modelName: String
+            +results: List~ReportResult~
         }
     }
 
@@ -124,7 +129,7 @@ classDiagram
     IEvalResult "1" *-- "0..*" EvalScore : scores
     IReportGenerator ..> IEvalRun : reads completed results
     IReportGenerator ..> IEvalReport : creates and returns
-    IEvalReport "1" --> "1" IEvalRun : summarizes
+    IEvalReport "1" *-- "0..*" ReportResult : snapshots
     ISuiteExporter ..> ITestSuite : reads suite and tests
     ISuiteExporter ..> IEvalRun : reads run and result history
 ```
@@ -147,14 +152,14 @@ Concrete domain classes explicitly implement these contracts:
 
 - **Test creation:** the builder validates a test and assigns its UUID; `suite.addTest(test)` assembles the suite. `TestCase` defines input and criteria and has no `run` method. This subsystem knows no providers, runners or reports.
 - **Execution:** `EvalRunner` coordinates the suite. The application obtains a `Model` through `ModelProvider.getModel(modelName)` and passes it to `run(suite, model)`. For each test the runner awaits the model response, creates an `EvalResult`, awaits every configured evaluator on a successful output, adds the returned scores and stores the result in `EvalRun`. It returns the completed run and knows no report classes. `EvalRun` records execution data and provides `addResult`; it does not execute tests.
-- **Reporting:** `ReportGenerator` reads the completed run, delegates the overall calculation to `OverallScoreEvaluator`, and creates `EvalReport`. The application supplies that strategy to the generator at construction. `EvalReport` is the final report object; it does not generate itself. This subsystem knows no runner, builder or provider implementations.
+- **Reporting:** `ReportGenerator` creates an `EvalReport` from the completed run. The report exposes the recorded results without aggregation. This subsystem knows no runner, builder or provider implementations.
 - **Exporting:** `JsonSuiteExporter` reads `ITestSuite` and its related `IEvalRun` objects and returns JSON containing the suite, tests, expectations, runs, results and scores. The caller retrieves the suite and its complete stored run history, which may be empty, and supplies them to `exportSuite`. Exporting is independent of execution and report generation and has no dependency on `EvalRunner` or `ReportGenerator`. The web interface handles downloading the returned JSON.
 
 The application supplies available evaluators to the runner, keyed by evaluator type. An `Expectation` describes a configured check; an `Evaluator` is the algorithm that performs it. The runner selects that algorithm through the `evaluatorType` property. An expectation neither creates nor depends on evaluator implementations. Multiple expectations may use the same evaluator type with different parameters.
 
 Each run also records its start time and provider/model names. It links to the suite through `suiteId`, and each result retains `testId`; neither requires a reference to the live suite or test object. Errors stay in their test's result and do not stop the following tests. A failed execution has no output to evaluate, so it may have no scores.
 
-The report reads the run's results instead of copying them. Historical results retain recorded outputs and evaluations, without test versions or prompt snapshots.
+Each result records the prompt template used at execution time. The report copies run metadata, results and scores into an independent snapshot. It does not retain test versions or all test definition fields.
 
 ### Test inputs and expectations
 
@@ -198,7 +203,7 @@ A test passes only when execution succeeds and **all its expectations pass**. Ev
 
 Reports and JSON exports expose each test's pass/fail outcome and clearly identify every failed expectation by ID, name and evaluator type, with its score and threshold or error message. Recorded labels and thresholds remain available even if the test definition is later edited.
 
-The overall strategy also returns an `EvalScore`, without an expectation ID or name. Expectation-specific fields are optional in the shared record, but required for individual expectation outcomes as described above. The overall formula remains part of the exercise and does not change individual test outcomes; scores with different scales cannot simply be averaged.
+Each expectation outcome retains its own score and scale. The report does not calculate an overall score or aggregate results.
 
 ## 2. Application flows
 
@@ -214,7 +219,6 @@ sequenceDiagram
     participant Model
     participant Evaluator
     participant Generator as ReportGenerator
-    participant Overall as OverallScoreEvaluator
 
     Note over App: Suite prepared through ITestCaseBuilder and ITestSuite
     App->>Provider: getModel(modelName)
@@ -224,7 +228,7 @@ sequenceDiagram
     loop For each test in suite.tests
         Runner->>Model: await generateResponse(test.prompt, test.variables)
         Model-->>Runner: output or execution error
-        Note over Runner: Create EvalResult with testId and output or error
+        Note over Runner: Create EvalResult with testId, prompt and output or error
         opt Execution succeeded
             loop For each expectation in test.expectations
                 Note over Runner: Select evaluator by expectation.evaluatorType
@@ -239,9 +243,7 @@ sequenceDiagram
     end
     Runner-->>App: IEvalRun
     App->>Generator: generate(run)
-    Generator->>Overall: evaluate(run)
-    Overall-->>Generator: Overall EvalScore
-    Note over Generator: Create EvalReport with run and overall score
+    Note over Generator: Copy run metadata and results into EvalReport
     Generator-->>App: IEvalReport
 ```
 
@@ -309,18 +311,11 @@ classDiagram
     SemanticSimilarityEvaluator ..|> Evaluator : Strategy
     LlmJudgeEvaluator ..|> Evaluator : Strategy
 
-    class OverallScoreEvaluator {
-        <<interface>>
-        +evaluate(run: IEvalRun) EvalScore
-    }
-    class ReportGenerator
-    ReportGenerator ..> OverallScoreEvaluator : delegates overall judgment
 ```
 
 - **Builder:** create a valid test before adding it to the suite. Optional setters are omitted; a suite needs no builder of its own.
 - **Adapter:** translate the external provider API into `Model`, supplied by `ModelProvider`. The selected model is the **SUT (System Under Test)**. A provider selects a model; it does not forward generation calls.
 - **Strategy:** evaluator implementations vary the evaluation algorithm while the runner keeps the same loop. No factory or resolver class is needed.
-- **Overall strategy:** the report generator delegates the overall judgment to its configured strategy. Its concrete implementation and formula remain part of the exercise; raw scores with different scales cannot simply be averaged.
 
 ## Implementation boundaries
 

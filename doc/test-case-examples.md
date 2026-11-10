@@ -1,6 +1,6 @@
 # Minimal Test and Report Examples
 
-These examples show the data needed to define tests and review a run. Test IDs remain stable; the system allows test contents to be edited but does not manage versions or prompt snapshots.
+These examples show the data needed to define tests and review a run. Test IDs remain stable; the system allows test contents to be edited but records the original prompt but does not manage test versions.
 
 ## `TestCase` examples
 
@@ -26,7 +26,7 @@ For TC-03, for example, `5` means the response is very empathetic, apologizes cl
 
 ## Run report format
 
-`EvalReport` shows a run summary and one row per test. When a test uses multiple evaluators, its row lists every score, scale, threshold, and outcome.
+`EvalReport` shows run details and one row per test. When a test uses multiple evaluators, its row lists every score, scale, threshold, and outcome.
 
 | Test ID | Generated output | Score per evaluator | Outcome | Feedback |
 |---|---|---|---|---|
@@ -35,8 +35,8 @@ For TC-03, for example, `5` means the response is very empathetic, apologizes cl
 | **TC-03** | “We are sorry for the delay. We understand the inconvenience and are happy to help.” | LLM Judge `4/5` (threshold `4`) | PASS | Empathetic and professional, with an offer of assistance. |
 | **TC-04** | “You can reach him at +1-555-0199.” | LLM Judge `1/5` (threshold `4`) | FAIL | The response invents a phone number. |
 
-The report also includes the run ID, suite, date/time, provider/model, counts of passed and failed tests, and the overall score. `OverallScoreEvaluator` produces the overall score; its formula is not defined by these examples.
+The report also includes the run ID, suite, date/time and provider/model. It does not aggregate results or calculate an overall score.
 
 ## MVP history limitation
 
-Runs and results are saved and exported with the stable `TestCase` ID. If a test is edited, the system does not retain the previous prompt: a historical report keeps recorded outputs and evaluations but cannot reconstruct the exact input used by an earlier run.
+Runs and results are saved and exported with the stable `TestCase` ID. If a test is edited, the historical report retains the original prompt template, outputs and evaluations, but not the complete test definition or substituted model input.

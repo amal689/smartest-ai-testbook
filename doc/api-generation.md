@@ -45,12 +45,12 @@ node api/scripts/generate.mjs python --check
 
 `api/generators/python.json` selects `python-fastapi` with the global properties
 `models,modelTests=false,modelDocs=false`. It generates only transport models in
-`web_server.generated.models`; the initial contract produces `health_response.py`.
+`smartest_ai_testbook.web_server.generated.models`; the initial contract produces `health_response.py`.
 Generation runs in a temporary directory and copies the generated package to
-`python/src/web_server/generated/`. It produces no router, API base classes,
+`python/src/smartest_ai_testbook/web_server/generated/`. It produces no router, API base classes,
 implementation discovery or server startup code.
 
-The handwritten `web_server/app.py` imports the generated model and declares
+The handwritten `smartest_ai_testbook/web_server/app.py` imports the generated model and declares
 the health route directly. Runtime dependencies belong in the project's own
 `python/pyproject.toml` and `uv.lock`. Repeated generation preserves all handwritten
 sources, check mode passes, and the generated model runs on Python 3.12.0.

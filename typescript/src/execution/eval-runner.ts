@@ -8,26 +8,28 @@ export interface IEvalRunner {
 }
 
 export class EvalRunner implements IEvalRunner {
-  constructor(private readonly evaluators: Readonly<Record<string, Evaluator>>) {}
+  constructor(private readonly evaluators: Readonly<Record<string, Evaluator>>) { }
 
   async run(suite: ITestSuite, model: Model): Promise<IEvalRun> {
     if (suite.tests.length === 0) throw new Error('Cannot run an empty suite.');
     const run = new EvalRun(suite.id, model.providerName, model.modelName);
     for (const test of suite.tests) {
-      run.addResult(await this.runTest(test, model));
+      const result = await this.runTest(test, model);
+      run.addResult(result);
     }
     return run;
   }
 
   private async runTest(test: ITestCase, model: Model): Promise<IEvalResult> {
+    const prompt = test.prompt;
     let output: string;
     try {
-      output = await model.generateResponse(test.prompt, test.variables);
+      output = await model.generateResponse(prompt, test.variables);
     } catch (error) {
-      return new EvalResult(test.id, undefined, error instanceof Error ? error.message : String(error));
+      return new EvalResult(test.id, prompt, undefined, error instanceof Error ? error.message : String(error));
     }
 
-    const result = new EvalResult(test.id, output);
+    const result = new EvalResult(test.id, prompt, output);
     for (const expectation of test.expectations) {
       const metadata = {
         expectationId: expectation.id,

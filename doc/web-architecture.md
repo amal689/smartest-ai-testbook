@@ -40,10 +40,10 @@ are left to Express.
 
 ## Python backend
 
-- `python/src/web_server/__main__.py`: process entry point.
-- `python/src/web_server/app.py`: FastAPI app, standard CORS middleware and the health route.
-- `python/src/web_server/generated/models/`: generated transport models only.
-- Future domain classes belong directly in `python/src/` and must not import HTTP code.
+- `python/src/smartest_ai_testbook/web_server/__main__.py`: process entry point.
+- `python/src/smartest_ai_testbook/web_server/app.py`: FastAPI app, standard CORS middleware and the health route.
+- `python/src/smartest_ai_testbook/web_server/generated/models/`: generated transport models only.
+- Domain code belongs in `python/src/smartest_ai_testbook/` and must not import HTTP code.
 
 The route is declared directly on the app and returns a generated `HealthResponse`.
 There is no generated router, API base class or implementation discovery. The
@@ -53,15 +53,13 @@ responses use framework defaults. Transport models are not domain entities.
 From `python/`, using Python 3.12 or later (PowerShell):
 
 ```powershell
-$env:PYTHONPATH = "src"
 uv sync --locked
 uv run --no-sync python -m unittest discover -s tests -v
-uv run --no-sync python -m web_server
+uv run --no-sync python -m smartest_ai_testbook.web_server
 ```
 
-In a POSIX shell, use `export PYTHONPATH=src` instead of the PowerShell assignment.
-uv manages `.venv`; `package = false` means the sources are not installed as a
-package, so `PYTHONPATH` is needed for the generated absolute imports.
+uv installs the project in `.venv` in editable mode, making its package available
+without setting `PYTHONPATH`.
 The default port is 3002. `PORT`, `WEB_ORIGIN` and the fixed bind address have the
 same meaning as in TypeScript. FastAPI and Uvicorn are pinned in `pyproject.toml`, and `uv.lock`
 locks all transitive dependencies. HTTPX is a development dependency for tests.
